@@ -1,12 +1,21 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace Vivus
 {
-    class Program
+    public class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            var monitor = new Monitor(@"node", "./test.js");
+
+            monitor.Run();
+            
+            while (true)
+            {
+                Console.WriteLine($"monitor output: {monitor.StandardOutput}");
+                await Task.Delay(1000);
+            }
         }
     }
 }
