@@ -15,7 +15,9 @@ namespace Vivus
         public StringBuilder StandardError { get; private set; }
         
         public int MaxRestarts { get; set; }
-        
+        public TimeSpan MaxRestartTime { get; set; }
+        public MonitorState State { get; private set; }
+        public int Restarts { get; private set; }
         private string _arguments;
         private Process _process;
         
@@ -37,7 +39,23 @@ namespace Vivus
             _arguments = arguments.Aggregate("", (builder, argument) => builder += argument);
         }
 
-        public void Run()
+        public async Task RunAsync()
+        {
+            Run();
+            while (true)
+            {
+                if (Restarts > MaxRestarts)
+                {
+                    State = MonitorState.Stopped;
+                    return;
+                }
+
+                Restarts = 0;
+                await Task.Delay(MaxRestartTime);
+            }
+        }
+
+        private void Run()
         {
 
             var process = new Process();
@@ -54,7 +72,8 @@ namespace Vivus
             process.EnableRaisingEvents = true;
             process.OutputDataReceived += (_, args) => { StandardOutput.AppendLine(args.Data); };
             process.ErrorDataReceived += (_, args) => { StandardError.AppendLine(args.Data); };
-
+            process.Exited += ProcessOnExited;
+            
             process.Start();
             process.BeginErrorReadLine();
             process.BeginOutputReadLine();
@@ -62,9 +81,9 @@ namespace Vivus
             
         }
 
-        private bool ShouldRestart()
+        private void ProcessOnExited(object? sender, EventArgs e)
         {
-            return true;
+            Restarts += 1;
         }
     }
 }
