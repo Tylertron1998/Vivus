@@ -59,14 +59,12 @@ namespace Vivus
             process.BeginErrorReadLine();
             process.BeginOutputReadLine();
             
-            _startTime = process.StartTime;
-            _id = process.Id;
             
         }
 
         private bool ShouldRestart()
         {
-            
+            return true;
         }
     }
 }
