@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Vivus.Logging;
 
-namespace Vivus
+namespace Vivus.Monitoring
 {
     public class Monitor
     {
-        public string Name { get; private set; }
-        public string[] Arguments { get; private set; }
-        public StringBuilder StandardOutput { get; private set; }
-        public StringBuilder StandardError { get; private set; }
+        public string Name { get; }
+        public string[] Arguments { get; }
+        public Logger StandardOutput { get; }
+        public Logger StandardError { get; }
         
         public int MaxRestarts { get; set; }
         public TimeSpan MaxRestartTime { get; set; }
@@ -24,8 +24,8 @@ namespace Vivus
 
         private Monitor()
         {
-            StandardOutput = new StringBuilder();
-            StandardError = new StringBuilder();
+            StandardOutput = new Logger();
+            StandardError = new Logger();
         }
         
         public Monitor(string name) : this()
@@ -70,8 +70,8 @@ namespace Vivus
             process.StartInfo = psi;
             
             process.EnableRaisingEvents = true;
-            process.OutputDataReceived += (_, args) => { StandardOutput.AppendLine(args.Data); };
-            process.ErrorDataReceived += (_, args) => { StandardError.AppendLine(args.Data); };
+            process.OutputDataReceived += (_, args) => { StandardOutput.Log(args.Data); };
+            process.ErrorDataReceived += (_, args) => { StandardError.Log(args.Data, LogLevel.Error); };
             process.Exited += ProcessOnExited;
             
             process.Start();
@@ -81,7 +81,7 @@ namespace Vivus
             
         }
 
-        private void ProcessOnExited(object? sender, EventArgs e)
+        private void ProcessOnExited(object? _, EventArgs e)
         {
             Restarts += 1;
         }
